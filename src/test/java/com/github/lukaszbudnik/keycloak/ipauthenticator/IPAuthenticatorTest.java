@@ -1,5 +1,8 @@
 package com.github.lukaszbudnik.keycloak.ipauthenticator;
 
+import static com.github.lukaszbudnik.keycloak.ipauthenticator.IPAuthenticator.IP_RANGE;
+import static com.github.lukaszbudnik.keycloak.ipauthenticator.IPAuthenticator.IP_URL;
+
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +22,7 @@ class IPAuthenticatorTest {
     Mockito.when(group1.getName())
            .thenReturn("IPX_TEST");
 
-    Mockito.when(group1.getAttributeStream("IPX_RANGE_URL"))
+    Mockito.when(group1.getAttributeStream(IP_URL))
            .thenReturn(Stream.empty());
     GroupModel group2 = Mockito.mock(GroupModel.class);
     Mockito.when(group2.getName())
@@ -43,7 +46,7 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_success() {
     // Mock Setup
-    Mockito.when(group1.getAttributeStream("IPX_RANGE"))
+    Mockito.when(group1.getAttributeStream(IP_RANGE))
            .thenReturn(Stream.of("192.168.1.0/28"));
 
     // start test
@@ -57,7 +60,7 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_fail_invalid_user_ip() {
     // Mock Setup
-    Mockito.when(group1.getAttributeStream("IPX_RANGE"))
+    Mockito.when(group1.getAttributeStream(IP_RANGE))
            .thenReturn(Stream.of("192.168.2.0/28"));
 
     // start test
@@ -71,7 +74,7 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_fail_invalid_ip_range() {
     // Mock Setup
-    Mockito.when(group1.getAttributeStream("IPX_RANGE"))
+    Mockito.when(group1.getAttributeStream(IP_RANGE))
            .thenReturn(Stream.of("192.168.256.0/28"));
 
     // start test

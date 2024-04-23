@@ -24,9 +24,9 @@ public class IPAuthenticator implements Authenticator {
 
   private static final Logger logger = Logger.getLogger(IPAuthenticator.class);
 
-  private static final String GROUP_IP_PREFIX = "IPX_";
-  private static final String IP_RANGE = GROUP_IP_PREFIX + "RANGE";
-  private static final String IP_URL = GROUP_IP_PREFIX + "RANGE_URL";
+  public static final String GROUP_IP_PREFIX = "IPX_";
+  public static final String IP_RANGE = GROUP_IP_PREFIX + "RANGE";
+  public static final String IP_URL = GROUP_IP_PREFIX + "RANGE_URL";
 
   private static final String INVALID_IP_ADDRESS_ERROR_MESSAGE = "invalid_ip_address";
 
