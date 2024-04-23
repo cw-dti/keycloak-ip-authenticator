@@ -9,34 +9,6 @@ import org.junit.jupiter.api.Test;
 class IPAuthenticatorRangeTest {
 
   @Test
-  void testIPRangeCheck5() {
-    String testIp = "255.255.255.255";
-    String testIp2 = "0.0.0.0";
-    List<String> allowedIPs = List.of("0.0.0.0/0");
-
-    Assertions.assertFalse(allowedIPs.stream()
-                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                         testIp))));
-    Assertions.assertFalse(allowedIPs.stream()
-                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                         testIp2))));
-  }
-
-  @Test
-  void testIPRangeCheck7() {
-    String testIp = "::1";
-    String testIp2 = "fe80::1";
-    List<String> allowedIPs = List.of("0.0.0.0/0");
-
-    Assertions.assertTrue(allowedIPs.stream()
-                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                        testIp))));
-    Assertions.assertTrue(allowedIPs.stream()
-                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                        testIp2))));
-  }
-
-  @Test
   void testIPRangeCheck() {
     String currentIp = "192.168.0.1";
     String currentIp2 = "127.0.0.2";
@@ -86,5 +58,33 @@ class IPAuthenticatorRangeTest {
     Assertions.assertTrue(allowedIPs.stream()
                                      .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
                                          testIp2))));
+  }
+
+  @Test
+  void testIPRangeCheck5() {
+    String testIp = "255.255.255.255";
+    String testIp2 = "0.0.0.0";
+    List<String> allowedIPs = List.of("0.0.0.0/0");
+
+    Assertions.assertFalse(allowedIPs.stream()
+                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
+                                         testIp))));
+    Assertions.assertFalse(allowedIPs.stream()
+                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
+                                         testIp2))));
+  }
+
+  @Test
+  void testIPRangeCheck6() {
+    String testIp = "::1";
+    String testIp2 = "fe80::1";
+    List<String> allowedIPs = List.of("0.0.0.0/0");
+
+    Assertions.assertTrue(allowedIPs.stream()
+                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
+                                        testIp))));
+    Assertions.assertTrue(allowedIPs.stream()
+                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
+                                        testIp2))));
   }
 }
