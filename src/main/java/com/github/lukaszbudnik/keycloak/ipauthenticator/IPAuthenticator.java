@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jboss.logging.Logger;
@@ -23,42 +24,65 @@ public class IPAuthenticator implements Authenticator {
 
   private static final Logger logger = Logger.getLogger(IPAuthenticator.class);
 
-  public static final String IP_RANGE = "IP_RANGE";
-  public static final String IP_URL = "IP_RANGE_URL";
+  private static final String GROUP_IP_PREFIX = "IPX_";
+  private static final String IP_RANGE = GROUP_IP_PREFIX + "RANGE";
+  private static final String IP_URL = GROUP_IP_PREFIX + "RANGE_URL";
+
+  private static final String INVALID_IP_ADDRESS_ERROR_MESSAGE = "invalid_ip_address";
 
   @Override
   public void authenticate(AuthenticationFlowContext context) {
-    try {
-      UserModel user = context.getUser();
-      String remoteIPAddress = context.getConnection()
-                                      .getRemoteAddr();
-      List<String> allowedIPAddress = getAllowedIPAddresses(user);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Access from " + remoteIPAddress);
-        logger.debug("Allowed IPs " + allowedIPAddress);
-      }
+    UserModel user = context.getUser();
+    String remoteIPAddress = context.getConnection()
+                                    .getRemoteAddr();
 
-      if (allowedIPAddress.stream()
-                          .map(IPAddressString::new)
-                          .filter(IPAddressString::isValid)
-                          .noneMatch(s -> s.contains(new IPAddressString(remoteIPAddress)))) {
+    Supplier<Stream<GroupModel>> supplier = () -> user.getGroupsStream()
+                                                      .filter(g -> g.getName()
+                                                                    .startsWith(GROUP_IP_PREFIX));
+
+    if (supplier.get()
+                .findAny()
+                .isPresent()) {
+      try {
+        List<IPAddressString> allowedIPAddress = getAllowedIPAddresses(supplier.get());
+        if (logger.isDebugEnabled()) {
+          logger.debug("Access from " + remoteIPAddress);
+          logger.debug("Allowed IPs " + allowedIPAddress);
+        }
+
+        if (allowedIPAddress.isEmpty()) {
+          throw new RuntimeException(
+              "User " + user.getEmail() + " (id: " + user.getId() + ") is member of an "
+                  + GROUP_IP_PREFIX + " group, but no valid IP addresses are provided!");
+        }
+
+        IPAddressString currentIp = new IPAddressString(remoteIPAddress);
+        if (allowedIPAddress.stream()
+                            .noneMatch(s -> s.contains(currentIp))) {
+          context.failure(AuthenticationFlowError.INVALID_USER,
+                          context.form()
+                                 .setError(INVALID_IP_ADDRESS_ERROR_MESSAGE)
+                                 .createErrorPage(Status.FORBIDDEN));
+        } else {
+          context.success();
+        }
+      } catch (Exception e) {
+        logger.error("Failed to login user with IPX flow", e);
         context.failure(AuthenticationFlowError.INVALID_USER,
                         context.form()
-                               .setError("invalid_ip_address")
+                               .setError(INVALID_IP_ADDRESS_ERROR_MESSAGE)
                                .createErrorPage(Status.FORBIDDEN));
-      } else {
-        context.success();
       }
-    } catch (Exception e) {
-      logger.error("Failed to login: ", e);
-      context.failure(AuthenticationFlowError.IDENTITY_PROVIDER_ERROR);
+    } else {
+      context.success();
     }
   }
 
-  private List<String> getAllowedIPAddresses(UserModel user) {
-    return user.getGroupsStream()
-               .flatMap(this::getIPsForGroup)
-               .collect(Collectors.toList());
+  private List<IPAddressString> getAllowedIPAddresses(Stream<GroupModel> stream) {
+    return stream.flatMap(this::getIPsForGroup)
+                 .map(IPAddressString::new)
+                 .filter(IPAddressString::isValid)
+                 .collect(Collectors.toList());
   }
 
   private Stream<String> getIPsForGroup(GroupModel group) {
@@ -98,9 +122,9 @@ public class IPAuthenticator implements Authenticator {
       }
       return lines;
     } catch (IOException e) {
-      logger.error("Failed to fetch valid IPs for group " + name + " and url " + urlString, e);
+      throw new RuntimeException(
+          "Failed to fetch valid IPs for group " + name + " and url " + urlString, e);
     }
-    throw new RuntimeException();
   }
 
   @Override

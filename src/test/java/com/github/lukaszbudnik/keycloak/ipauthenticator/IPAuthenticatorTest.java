@@ -1,107 +1,84 @@
 package com.github.lukaszbudnik.keycloak.ipauthenticator;
 
-
-import inet.ipaddr.IPAddressString;
-import java.util.List;
-import org.junit.jupiter.api.Assertions;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.keycloak.authentication.AuthenticationFlowContext;
+import org.keycloak.models.GroupModel;
+import org.keycloak.models.UserModel;
+import org.mockito.Mockito;
 
 class IPAuthenticatorTest {
 
-  @Test
-  void testIPRangeCheck5() {
-    String testIp = "255.255.255.255";
-    String testIp2 = "0.0.0.0";
-    List<String> allowedIPs = List.of("0.0.0.0/0");
+  private GroupModel group1;
+  private AuthenticationFlowContext context;
 
-    Assertions.assertFalse(allowedIPs.stream()
-                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                         testIp))));
-    Assertions.assertFalse(allowedIPs.stream()
-                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                         testIp2))));
+  @BeforeEach
+  void setup() {
+    group1 = Mockito.mock(GroupModel.class);
+    Mockito.when(group1.getName())
+           .thenReturn("IPX_TEST");
+
+    Mockito.when(group1.getAttributeStream("IPX_RANGE_URL"))
+           .thenReturn(Stream.empty());
+    GroupModel group2 = Mockito.mock(GroupModel.class);
+    Mockito.when(group2.getName())
+           .thenReturn("TEST");
+
+    UserModel user = Mockito.mock(UserModel.class);
+    Mockito.when(user.getGroupsStream())
+           .thenAnswer(invocationOnMock -> Stream.of(group1, group2));
+    Mockito.when(user.getEmail()).thenReturn("test@example.com");
+    Mockito.when(user.getId()).thenReturn("user_id_1");
+
+    context = Mockito.mock(AuthenticationFlowContext.class,
+                                                     Mockito.RETURNS_DEEP_STUBS);
+    Mockito.when(context.getUser())
+           .thenReturn(user);
+    Mockito.when(context.getConnection()
+                        .getRemoteAddr())
+           .thenReturn("192.168.1.1");
   }
 
   @Test
-  void testIPRangeCheck6() {
-    String testIp = "192.168.0.256";
-    String testIp2 = "255.255.255.300";
-    List<String> allowedIPs = List.of("0.0.0.0/0");
+  void testAuthenticationFlow_success() {
+    // Mock Setup
+    Mockito.when(group1.getAttributeStream("IPX_RANGE"))
+           .thenReturn(Stream.of("192.168.1.0/28"));
 
-    /*Assertions.assertThrows(IllegalArgumentException.class,
-                            () -> allowedIPs.stream()
-                                            .anyMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                                testIp))));
+    // start test
+    IPAuthenticator authenticator = new IPAuthenticator();
+    authenticator.authenticate(context);
 
-    Assertions.assertThrows(IllegalArgumentException.class,
-                            () -> allowedIPs.stream()
-                                            .anyMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                                testIp2))));*/
+    Mockito.verify(context, Mockito.times(1))
+           .success();
   }
 
   @Test
-  void testIPRangeCheck7() {
-    String testIp = "::1";
-    String testIp2 = "fe80::1";
-    List<String> allowedIPs = List.of("0.0.0.0/0");
+  void testAuthenticationFlow_fail_invalid_user_ip() {
+    // Mock Setup
+    Mockito.when(group1.getAttributeStream("IPX_RANGE"))
+           .thenReturn(Stream.of("192.168.2.0/28"));
 
-    Assertions.assertTrue(allowedIPs.stream()
-                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                        testIp))));
-    Assertions.assertTrue(allowedIPs.stream()
-                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                        testIp2))));
+    // start test
+    IPAuthenticator authenticator = new IPAuthenticator();
+    authenticator.authenticate(context);
+
+    Mockito.verify(context, Mockito.times(1))
+           .failure(Mockito.any(), Mockito.any());
   }
 
   @Test
-  void testIPRangeCheck() {
-    String currentIp = "192.168.0.1";
-    String currentIp2 = "127.0.0.2";
-    List<String> allowedIPs = List.of("127.0.0.0/30");
+  void testAuthenticationFlow_fail_invalid_ip_range() {
+    // Mock Setup
+    Mockito.when(group1.getAttributeStream("IPX_RANGE"))
+           .thenReturn(Stream.of("192.168.256.0/28"));
 
-    Assertions.assertTrue(allowedIPs.stream().noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(currentIp))));
-    Assertions.assertFalse(allowedIPs.stream().noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(currentIp2))));
-  }
+    // start test
+    IPAuthenticator authenticator = new IPAuthenticator();
+    authenticator.authenticate(context);
 
-  @Test
-  void testIPRangeCheck2() {
-    String testIp = "127.0.0.5";
-    String testIp2 = "127.0.0.1";
-    List<String> allowedIPs = List.of("127.0.0.0/30");
-
-    Assertions.assertTrue(allowedIPs.stream()
-                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                        testIp))));
-    Assertions.assertFalse(allowedIPs.stream()
-                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                         testIp2))));
-  }
-
-  @Test
-  void testIPRangeCheck3() {
-    String testIp = "255.255.255.0";
-    String testIp2 = "10.0.1.3";
-    List<String> allowedIPs = List.of("10.0.1.0/24");
-
-    Assertions.assertTrue(allowedIPs.stream()
-                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                        testIp))));
-    Assertions.assertFalse(allowedIPs.stream()
-                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                         testIp2))));
-  }
-
-  @Test
-  void testIPRangeCheck4() {
-    String testIp = "255.255.255.0";
-    String testIp2 = "10.0.1.3";
-    List<String> allowedIPs = List.of("0.0.0.0/32");
-
-    Assertions.assertTrue(allowedIPs.stream()
-                                    .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                        testIp))));
-    Assertions.assertTrue(allowedIPs.stream()
-                                     .noneMatch(s -> new IPAddressString(s).contains(new IPAddressString(
-                                         testIp2))));
+    Mockito.verify(context, Mockito.times(1))
+           .failure(Mockito.any(), Mockito.any());
   }
 }
