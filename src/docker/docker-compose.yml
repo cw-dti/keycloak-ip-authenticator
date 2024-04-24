@@ -1,0 +1,16 @@
+version: '3'
+services:
+  keycloak:
+    build: .
+    environment:
+      # Default user name und password
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      #- KC_LOG_LEVEL=DEBUG
+    command: start-dev
+    volumes:
+      - keycloak-data:/opt/keycloak/data
+    restart: always
+
+volumes:
+  keycloak-data:

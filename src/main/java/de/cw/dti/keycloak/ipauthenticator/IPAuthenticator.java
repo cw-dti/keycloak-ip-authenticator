@@ -102,7 +102,7 @@ public class IPAuthenticator implements Authenticator {
   }
 
   private List<String> getIPsFromAttributes(Stream<String> attributeStream) {
-    return attributeStream.flatMap(a -> Arrays.stream(a.split(",")))
+    return attributeStream.flatMap(a -> Arrays.stream(a.split("[,;]+")))
                           .filter(StringUtil::isNotBlank)
                           .map(String::trim)
                           .collect(Collectors.toList());
