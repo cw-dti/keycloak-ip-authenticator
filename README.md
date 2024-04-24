@@ -47,3 +47,8 @@ Wenn Sie das neueste Keycloak auf Quarkus verwenden, kopieren Sie es in das Verz
 ```bash
 cp target/keycloak-ip-authenticator.jar $KEYCLOAK_HOME/providers/
 ```
+
+# Nutzung
+
+Nachdem Sie den Authenticator installiert haben, können Sie ihn in den Authentication Einstellungen
+von Keycloak einen eigenen Login Flow (für den Browser) anlegen, der den Authenticator verwendet.
