@@ -1,9 +1,10 @@
-package com.github.lukaszbudnik.keycloak.ipauthenticator;
+package de.cw.dti.keycloak.ipauthenticator;
 
-import static com.github.lukaszbudnik.keycloak.ipauthenticator.IPAuthenticator.IP_RANGE;
-import static com.github.lukaszbudnik.keycloak.ipauthenticator.IPAuthenticator.IP_URL;
+import static de.cw.dti.keycloak.ipauthenticator.IPAuthenticator.IP_RANGE;
 
-import java.util.stream.Stream;
+import de.cw.dti.keycloak.ipauthenticator.stubs.GroupModelStub;
+import de.cw.dti.keycloak.ipauthenticator.stubs.UserModelStub;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.keycloak.authentication.AuthenticationFlowContext;
@@ -18,24 +19,13 @@ class IPAuthenticatorTest {
 
   @BeforeEach
   void setup() {
-    group1 = Mockito.mock(GroupModel.class);
-    Mockito.when(group1.getName())
-           .thenReturn("IPX_TEST");
+    group1 = new GroupModelStub("IPX_TEST");
 
-    Mockito.when(group1.getAttributeStream(IP_URL))
-           .thenReturn(Stream.empty());
-    GroupModel group2 = Mockito.mock(GroupModel.class);
-    Mockito.when(group2.getName())
-           .thenReturn("TEST");
-
-    UserModel user = Mockito.mock(UserModel.class);
-    Mockito.when(user.getGroupsStream())
-           .thenAnswer(invocationOnMock -> Stream.of(group1, group2));
-    Mockito.when(user.getEmail()).thenReturn("test@example.com");
-    Mockito.when(user.getId()).thenReturn("user_id_1");
+    GroupModel group2 = new GroupModelStub("TEST");
+    UserModel user = new UserModelStub("user_id_1", "test@example.com", List.of(group1, group2));
 
     context = Mockito.mock(AuthenticationFlowContext.class,
-                                                     Mockito.RETURNS_DEEP_STUBS);
+                           Mockito.RETURNS_DEEP_STUBS);
     Mockito.when(context.getUser())
            .thenReturn(user);
     Mockito.when(context.getConnection()
@@ -46,8 +36,7 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_success() {
     // Mock Setup
-    Mockito.when(group1.getAttributeStream(IP_RANGE))
-           .thenReturn(Stream.of("192.168.1.0/28"));
+    group1.setAttribute(IP_RANGE, List.of("192.168.1.0/28"));
 
     // start test
     IPAuthenticator authenticator = new IPAuthenticator();
@@ -60,8 +49,7 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_fail_invalid_user_ip() {
     // Mock Setup
-    Mockito.when(group1.getAttributeStream(IP_RANGE))
-           .thenReturn(Stream.of("192.168.2.0/28"));
+    group1.setAttribute(IP_RANGE, List.of("192.168.2.0/28"));
 
     // start test
     IPAuthenticator authenticator = new IPAuthenticator();
@@ -74,8 +62,7 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_fail_invalid_ip_range() {
     // Mock Setup
-    Mockito.when(group1.getAttributeStream(IP_RANGE))
-           .thenReturn(Stream.of("192.168.256.0/28"));
+    group1.setAttribute(IP_RANGE, List.of("192.168.256.0/28"));
 
     // start test
     IPAuthenticator authenticator = new IPAuthenticator();

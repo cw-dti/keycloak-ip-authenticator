@@ -1,4 +1,4 @@
-package com.github.lukaszbudnik.keycloak.ipauthenticator;
+package de.cw.dti.keycloak.ipauthenticator;
 
 import inet.ipaddr.IPAddressString;
 import jakarta.ws.rs.core.Response.Status;
@@ -40,31 +40,28 @@ public class IPAuthenticator implements Authenticator {
                                                       .filter(g -> g.getName()
                                                                     .startsWith(GROUP_IP_PREFIX));
 
-    if (supplier.get()
-                .findAny()
-                .isPresent()) {
+    if (hasIpRestrictedGroup(supplier.get())) {
       try {
-        List<IPAddressString> allowedIPAddress = getAllowedIPAddresses(supplier.get());
+        List<IPAddressString> allowedIPAddressRanges = getAllowedIPAddresses(supplier.get());
         if (logger.isDebugEnabled()) {
           logger.debug("Access from " + remoteIPAddress);
-          logger.debug("Allowed IPs " + allowedIPAddress);
+          logger.debug("Allowed IPs " + allowedIPAddressRanges);
         }
 
-        if (allowedIPAddress.isEmpty()) {
+        if (allowedIPAddressRanges.isEmpty()) {
           throw new RuntimeException(
               "User " + user.getEmail() + " (id: " + user.getId() + ") is member of an "
                   + GROUP_IP_PREFIX + " group, but no valid IP addresses are provided!");
         }
 
         IPAddressString currentIp = new IPAddressString(remoteIPAddress);
-        if (allowedIPAddress.stream()
-                            .noneMatch(s -> s.contains(currentIp))) {
+        if (hasIpInAnyIpRange(allowedIPAddressRanges, currentIp)) {
+          context.success();
+        } else {
           context.failure(AuthenticationFlowError.INVALID_USER,
                           context.form()
                                  .setError(INVALID_IP_ADDRESS_ERROR_MESSAGE)
                                  .createErrorPage(Status.FORBIDDEN));
-        } else {
-          context.success();
         }
       } catch (Exception e) {
         logger.error("Failed to login user with IPX flow", e);
@@ -76,6 +73,17 @@ public class IPAuthenticator implements Authenticator {
     } else {
       context.success();
     }
+  }
+
+  private static boolean hasIpInAnyIpRange(List<IPAddressString> allowedIPAddressRanges,
+                                           IPAddressString currentIp) {
+    return allowedIPAddressRanges.stream()
+                                 .anyMatch(s -> s.contains(currentIp));
+  }
+
+  private static boolean hasIpRestrictedGroup(Stream<GroupModel> stream) {
+    return stream.findAny()
+                 .isPresent();
   }
 
   private List<IPAddressString> getAllowedIPAddresses(Stream<GroupModel> stream) {
