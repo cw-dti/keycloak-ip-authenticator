@@ -1,7 +1,7 @@
 version: '3'
 services:
   keycloak:
-    build: .
+    image: quay.io/keycloak/keycloak:24.0.1
     environment:
       # Default user name und password
       - KEYCLOAK_ADMIN=admin
@@ -10,6 +10,7 @@ services:
     command: start-dev
     volumes:
       - keycloak-data:/opt/keycloak/data
+      - ../../target/keycloak-ip-authenticator.jar /opt/keycloak/providers/keycloak-ip-authenticator.jar
     restart: always
 
 volumes:

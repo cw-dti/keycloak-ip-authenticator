@@ -49,30 +49,31 @@ public class IPAuthenticator implements Authenticator {
         }
 
         if (allowedIPAddressRanges.isEmpty()) {
-          throw new RuntimeException(
-              "User " + user.getEmail() + " (id: " + user.getId() + ") is member of an "
-                  + GROUP_IP_PREFIX + " group, but no valid IP addresses are provided!");
+          logger.error("User " + user.getEmail() + " (id: " + user.getId() + ") is member of an "
+                           + GROUP_IP_PREFIX + " group, but no valid IP addresses are provided!");
+          handleLoginFailure(context);
         }
 
         IPAddressString currentIp = new IPAddressString(remoteIPAddress);
         if (hasIpInAnyIpRange(allowedIPAddressRanges, currentIp)) {
           context.success();
         } else {
-          context.failure(AuthenticationFlowError.INVALID_USER,
-                          context.form()
-                                 .setError(INVALID_IP_ADDRESS_ERROR_MESSAGE)
-                                 .createErrorPage(Status.FORBIDDEN));
+          handleLoginFailure(context);
         }
       } catch (Exception e) {
         logger.error("Failed to login user with IPX flow", e);
-        context.failure(AuthenticationFlowError.INVALID_USER,
-                        context.form()
-                               .setError(INVALID_IP_ADDRESS_ERROR_MESSAGE)
-                               .createErrorPage(Status.FORBIDDEN));
+        handleLoginFailure(context);
       }
     } else {
       context.success();
     }
+  }
+
+  private static void handleLoginFailure(AuthenticationFlowContext context) {
+    context.failure(AuthenticationFlowError.INVALID_USER,
+                    context.form()
+                           .setError(INVALID_IP_ADDRESS_ERROR_MESSAGE)
+                           .createErrorPage(Status.FORBIDDEN));
   }
 
   private static boolean hasIpInAnyIpRange(List<IPAddressString> allowedIPAddressRanges,
