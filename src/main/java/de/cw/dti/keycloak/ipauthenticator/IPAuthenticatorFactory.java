@@ -1,4 +1,4 @@
-package com.github.lukaszbudnik.keycloak.ipauthenticator;
+package de.cw.dti.keycloak.ipauthenticator;
 
 import static org.keycloak.provider.ProviderConfigProperty.STRING_TYPE;
 
