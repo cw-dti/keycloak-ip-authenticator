@@ -52,6 +52,7 @@ public class IPAuthenticator implements Authenticator {
           logger.error("User " + user.getEmail() + " (id: " + user.getId() + ") is member of an "
                            + GROUP_IP_PREFIX + " group, but no valid IP addresses are provided!");
           handleLoginFailure(context);
+          return;
         }
 
         IPAddressString currentIp = new IPAddressString(remoteIPAddress);
