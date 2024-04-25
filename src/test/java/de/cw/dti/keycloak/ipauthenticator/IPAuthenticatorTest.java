@@ -50,7 +50,7 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_success2() {
     // Mock Setup
-    group1.setAttribute(IP_RANGE, List.of(";; 192.168.1.0/28 ; , ;"));
+    group1.setAttribute(IP_RANGE, List.of(";; 192.168.1.0/28 ; , ;foo,bar;foo;null;!!\"\";''"));
 
     // start test
     IPAuthenticator authenticator = new IPAuthenticator();
