@@ -48,6 +48,19 @@ class IPAuthenticatorTest {
   }
 
   @Test
+  void testAuthenticationFlow_success2() {
+    // Mock Setup
+    group1.setAttribute(IP_RANGE, List.of(";; 192.168.1.0/28 ; , ;"));
+
+    // start test
+    IPAuthenticator authenticator = new IPAuthenticator();
+    authenticator.authenticate(context);
+
+    Mockito.verify(context, Mockito.times(1))
+           .success();
+  }
+
+  @Test
   void testAuthenticationFlow_fail_invalid_user_ip() {
     // Mock Setup
     group1.setAttribute(IP_RANGE, List.of("192.168.2.0/28"));
