@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -104,7 +105,8 @@ public class IPAuthenticator implements Authenticator {
   }
 
   private List<String> getIPsFromAttributes(Stream<String> attributeStream) {
-    return attributeStream.flatMap(a -> Arrays.stream(a.split("[,;]+")))
+    return attributeStream.filter(StringUtil::isNotBlank)
+                          .flatMap(a -> Arrays.stream(a.split("[,;]+")))
                           .filter(StringUtil::isNotBlank)
                           .map(String::trim)
                           .collect(Collectors.toList());

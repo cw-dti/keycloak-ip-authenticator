@@ -4,6 +4,7 @@ import static de.cw.dti.keycloak.ipauthenticator.IPAuthenticator.IP_RANGE;
 
 import de.cw.dti.keycloak.ipauthenticator.stubs.GroupModelStub;
 import de.cw.dti.keycloak.ipauthenticator.stubs.UserModelStub;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,14 @@ class IPAuthenticatorTest {
   @Test
   void testAuthenticationFlow_fail_invalid_ip_range() {
     // Mock Setup
-    group1.setAttribute(IP_RANGE, List.of("192.168.256.0/28"));
+    List<String> ips = new ArrayList<>();
+    ips.add("192.168.256.0/28");
+    ips.add(null);
+    ips.add("");
+    ips.add("\r\n");
+    ips.add("aaa.bbb.ccc.ddd/ee");
+    ips.add("192.168.257.0/32;;;;192.168.257.1/32,,192.168.257.2/32");
+    group1.setAttribute(IP_RANGE, ips);
 
     // start test
     IPAuthenticator authenticator = new IPAuthenticator();
@@ -71,4 +79,6 @@ class IPAuthenticatorTest {
     Mockito.verify(context, Mockito.times(1))
            .failure(Mockito.any(), Mockito.any());
   }
+
+
 }
