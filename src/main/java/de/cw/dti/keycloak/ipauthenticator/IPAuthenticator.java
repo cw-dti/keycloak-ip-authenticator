@@ -127,7 +127,7 @@ public class IPAuthenticator implements Authenticator {
         String line;
         while ((line = reader.readLine()) != null) {
           line = line.trim();
-          if (!line.isEmpty()) {
+          if (StringUtil.isNotBlank(line)) {
             lines.add(line);
           }
         }
