@@ -18,7 +18,6 @@ public class IPAuthenticatorFactory implements AuthenticatorFactory {
     public static final String ID = "ipauthenticator";
 
     private static final Authenticator AUTHENTICATOR_INSTANCE = new IPAuthenticator();
-    static final String ALLOWED_IP_ADDRESS_CONFIG = "allowed_ip_address";
 
     @Override
     public Authenticator create(KeycloakSession keycloakSession) {
@@ -52,14 +51,7 @@ public class IPAuthenticatorFactory implements AuthenticatorFactory {
 
     @Override
     public List<ProviderConfigProperty> getConfigProperties() {
-        ProviderConfigProperty name = new ProviderConfigProperty();
-
-        name.setType(STRING_TYPE);
-        name.setName(ALLOWED_IP_ADDRESS_CONFIG);
-        name.setLabel("IP Address from which sign ins are allowed");
-        name.setHelpText("Only accepts IP addresses, no CIDR nor masks nor ranges supported");
-
-        return Collections.singletonList(name);
+        return Collections.emptyList();
     }
 
     @Override
