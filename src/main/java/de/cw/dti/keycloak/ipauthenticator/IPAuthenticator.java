@@ -37,9 +37,7 @@ public class IPAuthenticator implements Authenticator {
     String remoteIPAddress = context.getConnection()
                                     .getRemoteAddr();
 
-    Supplier<Stream<GroupModel>> supplier = () -> user.getGroupsStream()
-                                                      .filter(g -> g.getName()
-                                                                    .startsWith(GROUP_IP_PREFIX));
+    Supplier<Stream<GroupModel>> supplier = () -> getGroupsWithIPAttributes(user);
 
     if (hasIpRestrictedGroup(supplier.get())) {
       try {
@@ -50,8 +48,8 @@ public class IPAuthenticator implements Authenticator {
         }
 
         if (allowedIPAddressRanges.isEmpty()) {
-          logger.error("User " + user.getEmail() + " (id: " + user.getId() + ") is member of an "
-                           + GROUP_IP_PREFIX + " group, but no valid IP addresses are provided!");
+          logger.error("User " + user.getEmail() + " (id: " + user.getId() + ") is member of a "
+                           + "group with IP whitelisting, but no valid IP addresses are provided!");
           handleLoginFailure(context);
           return;
         }
@@ -76,6 +74,14 @@ public class IPAuthenticator implements Authenticator {
                     context.form()
                            .setError(INVALID_IP_ADDRESS_ERROR_MESSAGE)
                            .createErrorPage(Status.FORBIDDEN));
+  }
+
+  private static Stream<GroupModel> getGroupsWithIPAttributes(UserModel user) {
+    return user.getGroupsStream()
+               .filter(g -> Stream.concat(g.getAttributeStream(IP_RANGE),
+                                          g.getAttributeStream(IP_URL))
+                                  .findAny()
+                                  .isPresent());
   }
 
   private static boolean hasIpInAnyIpRange(List<IPAddressString> allowedIPAddressRanges,

@@ -20,9 +20,9 @@ class IPAuthenticatorTest {
 
   @BeforeEach
   void setup() {
-    group1 = new GroupModelStub("IPX_TEST");
+    group1 = new GroupModelStub("TEST");
 
-    GroupModel group2 = new GroupModelStub("TEST");
+    GroupModel group2 = new GroupModelStub("TEST2");
     UserModel user = new UserModelStub("user_id_1", "test@example.com", List.of(group1, group2));
 
     context = Mockito.mock(AuthenticationFlowContext.class,
