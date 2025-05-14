@@ -1,8 +1,7 @@
 # Keycloak-IP-Authenticator
 
 Ein einfacher Keycloak Authenticator, der die IP-Adresse des Clients überprüft. Die IP Adressen
-könnten dazu in den Attributen einer Gruppe hinterlegt werden. Die Gruppe muss dabei das
-Prefix `IPX_` nutzen, um von dem Authenticator erkannt zu werden.
+könnten dazu in den Attributen einer Gruppe hinterlegt werden. Wenn beide Attribute in einer Gruppe gesetzt sind, wird diese für die IP Authentication genutzt.
 
 In der Gruppe könnten die Attribute `IPX_RANGE` und `IPX_RANGE_URL` genutzt werden um die
 IP-Adressen
